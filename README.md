@@ -30,7 +30,10 @@ python -m http.server 8000
 - `Ctrl + Enter` / `Cmd + Enter` - Format
 - `Ctrl + M` / `Cmd + M` - Minify
 - `Ctrl + K` / `Cmd + K` - Clear editor
-- `Tab` - Insert indent (does not jump focus)
+- `Tab` - Insert indent
+- `Esc` - Release focus from editor for keyboard navigation
+- Dark and Light mode toggle with local storage persistence
+- Mobile-optimized segmented view (Input, Output, Split) with 44px touch targets
 
 ## Tech Stack
 

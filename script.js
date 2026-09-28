@@ -1,16 +1,18 @@
-// made by hanx https://hanx.pro
-// last update/touched 26.08.2026
+// format.json - Fast client-side JSON Formatter & Validator
+// Originally created by hanx (https://hanx.lol)
+
 (function () {
     "use strict";
 
     var jsonInput = document.getElementById("json-input");
     var jsonOutput = document.getElementById("json-output");
-    var statusMsg = document.getElementById("status-msg");
-    var statusDot = document.getElementById("status-dot");
-    var statusText = document.getElementById("status-text");
+    var editorMain = document.getElementById("editor-main");
     var errorDetail = document.getElementById("error-detail");
+    var errorMessage = document.getElementById("error-message");
+    var btnCloseError = document.getElementById("btn-close-error");
     var charCount = document.getElementById("char-count");
     var lineCount = document.getElementById("line-count");
+    var sizeCount = document.getElementById("size-count");
     var indentSelect = document.getElementById("indent-select");
     var fileUpload = document.getElementById("file-upload");
     var toast = document.getElementById("toast");
@@ -24,13 +26,20 @@
     var btnUpload = document.getElementById("btn-upload");
     var btnExample = document.getElementById("btn-example");
 
+    var btnTheme = document.getElementById("btn-theme");
+    var themeLabel = document.getElementById("theme-label");
+
+    var tabBtnInput = document.getElementById("tab-btn-input");
+    var tabBtnOutput = document.getElementById("tab-btn-output");
+    var tabBtnSplit = document.getElementById("tab-btn-split");
+
     var lastFormatted = "";
     var toastTimer = null;
 
     var EXAMPLE_JSON = {
-        "name": "hanx-json-tool",
-        "version": "1.0.0",
-        "description": "JSON Formatter & Validator — by hanx.lol",
+        "name": "format.json",
+        "version": "1.1.0",
+        "description": "JSON Formatter and Validator: by hanx.lol",
         "author": {
             "name": "hanx",
             "url": "https://hanx.lol"
@@ -40,6 +49,8 @@
             "minify",
             "validate",
             "syntax-highlight",
+            "dark-light-theme",
+            "responsive-mobile",
             "upload",
             "download"
         ],
@@ -50,13 +61,50 @@
         },
         "stats": {
             "users": 1024,
-            "version": 1,
             "active": true,
-            "deprecated": false,
             "ratio": 3.14159,
             "nothing": null
         }
     };
+
+    function initTheme() {
+        var savedTheme = localStorage.getItem("format_json_theme");
+        var theme = savedTheme || "dark";
+        applyTheme(theme);
+    }
+
+    function applyTheme(theme) {
+        document.documentElement.setAttribute("data-theme", theme);
+        localStorage.setItem("format_json_theme", theme);
+        if (theme === "dark") {
+            themeLabel.textContent = "Light";
+            btnTheme.setAttribute("title", "Switch to light theme");
+        } else {
+            themeLabel.textContent = "Dark";
+            btnTheme.setAttribute("title", "Switch to dark theme");
+        }
+    }
+
+    function toggleTheme() {
+        var current = document.documentElement.getAttribute("data-theme") || "dark";
+        var next = (current === "dark") ? "light" : "dark";
+        applyTheme(next);
+        showToast("Switched to " + next + " mode");
+    }
+
+    function setMobileView(view) {
+        editorMain.setAttribute("data-mobile-view", view);
+        var tabs = [
+            { btn: tabBtnInput, name: "input" },
+            { btn: tabBtnOutput, name: "output" },
+            { btn: tabBtnSplit, name: "split" }
+        ];
+        tabs.forEach(function (t) {
+            var isActive = (t.name === view);
+            t.btn.classList.toggle("active", isActive);
+            t.btn.setAttribute("aria-selected", isActive ? "true" : "false");
+        });
+    }
 
     function getIndent() {
         var v = indentSelect.value;
@@ -125,7 +173,7 @@
 
     function renderOutput(text, useHighlight) {
         if (!text) {
-            jsonOutput.innerHTML = '<span class="empty-hint">Output will appear here after Format or Validate.</span>';
+            jsonOutput.innerHTML = '<span class="empty-hint">Output will appear here after formatting or validating.</span>';
             lastFormatted = "";
             return;
         }
@@ -137,26 +185,22 @@
         lastFormatted = text;
     }
 
-    function setStatus(type, msg) {
-        statusMsg.className = "status-msg " + type;
-        statusText.textContent = msg;
-        if (type === "ok") {
-            statusDot.style.background = "var(--ok)";
-        } else if (type === "err") {
-            statusDot.style.background = "var(--err)";
-        } else {
-            statusDot.style.background = "var(--text-faint)";
-        }
-    }
-
     function showError(msg) {
         errorDetail.style.display = "block";
-        errorDetail.textContent = msg;
+        errorMessage.textContent = msg;
     }
 
     function hideError() {
         errorDetail.style.display = "none";
-        errorDetail.textContent = "";
+        errorMessage.textContent = "";
+    }
+
+    function formatBytes(bytes) {
+        if (bytes < 1024) return bytes + " B";
+        var kb = bytes / 1024;
+        if (kb < 1024) return kb.toFixed(1) + " KB";
+        var mb = kb / 1024;
+        return mb.toFixed(2) + " MB";
     }
 
     function updateStats() {
@@ -164,21 +208,33 @@
         charCount.textContent = val.length.toLocaleString();
         var lines = val === "" ? 0 : (val.match(/\n/g) || []).length + 1;
         lineCount.textContent = lines.toLocaleString();
+        var bytes = new Blob([val]).size;
+        sizeCount.textContent = formatBytes(bytes);
     }
 
     function showToast(msg) {
         toast.textContent = msg;
         toast.classList.add("show");
         if (toastTimer) clearTimeout(toastTimer);
-        toastTimer = setTimeout(function () { toast.classList.remove("show"); }, 2200);
+        toastTimer = setTimeout(function () {
+            toast.classList.remove("show");
+        }, 2200);
+    }
+
+    function isMobileView() {
+        return window.innerWidth <= 768;
     }
 
     function doFormat() {
         var raw = jsonInput.value.trim();
-        if (!raw) { setStatus("idle", "Nothing to format"); hideError(); renderOutput("", false); return; }
+        if (!raw) {
+            hideError();
+            renderOutput("", false);
+            showToast("Nothing to format");
+            return;
+        }
         var result = safeParse(raw);
         if (!result.ok) {
-            setStatus("err", "Invalid JSON — cannot format");
             showError(friendlyError(result.error, raw));
             renderOutput("", false);
             return;
@@ -187,17 +243,22 @@
         var formatted = JSON.stringify(result.value, null, getIndent());
         jsonInput.value = formatted;
         renderOutput(formatted, true);
-        setStatus("ok", "Formatted successfully");
         updateStats();
         showToast("Formatted");
+
+        if (isMobileView()) {
+            setMobileView("output");
+        }
     }
 
     function doMinify() {
         var raw = jsonInput.value.trim();
-        if (!raw) { setStatus("idle", "Nothing to minify"); return; }
+        if (!raw) {
+            showToast("Nothing to minify");
+            return;
+        }
         var result = safeParse(raw);
         if (!result.ok) {
-            setStatus("err", "Invalid JSON — cannot minify");
             showError(friendlyError(result.error, raw));
             renderOutput("", false);
             return;
@@ -206,21 +267,31 @@
         var minified = JSON.stringify(result.value);
         jsonInput.value = minified;
         renderOutput(minified, false);
-        setStatus("ok", "Minified — " + minified.length.toLocaleString() + " chars");
         updateStats();
-        showToast("Minified");
+        showToast("Minified: " + minified.length.toLocaleString() + " chars");
+
+        if (isMobileView()) {
+            setMobileView("output");
+        }
     }
 
     function doValidate() {
         var raw = jsonInput.value.trim();
-        if (!raw) { setStatus("idle", "Nothing to validate"); hideError(); renderOutput("", false); return; }
+        if (!raw) {
+            hideError();
+            renderOutput("", false);
+            showToast("Nothing to validate");
+            return;
+        }
         var result = safeParse(raw);
         if (result.ok) {
-            setStatus("ok", "Valid JSON");
             hideError();
             renderOutput(JSON.stringify(result.value, null, getIndent()), true);
+            showToast("Valid JSON syntax");
+            if (isMobileView()) {
+                setMobileView("output");
+            }
         } else {
-            setStatus("err", "Invalid JSON");
             showError(friendlyError(result.error, raw));
             renderOutput("", false);
         }
@@ -230,19 +301,26 @@
         jsonInput.value = "";
         lastFormatted = "";
         renderOutput("", false);
-        setStatus("idle", "Cleared");
         hideError();
         updateStats();
+        if (isMobileView()) {
+            setMobileView("input");
+        }
         jsonInput.focus();
     }
 
     function doCopy() {
         var text = lastFormatted || jsonInput.value;
-        if (!text) { showToast("Nothing to copy"); return; }
+        if (!text) {
+            showToast("Nothing to copy");
+            return;
+        }
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(text).then(function () {
                 showToast("Copied to clipboard");
-            }).catch(function () { fallbackCopy(text); });
+            }).catch(function () {
+                fallbackCopy(text);
+            });
         } else {
             fallbackCopy(text);
         }
@@ -255,14 +333,21 @@
         document.body.appendChild(ta);
         ta.focus();
         ta.select();
-        try { document.execCommand("copy"); showToast("Copied to clipboard"); }
-        catch (e) { showToast("Copy failed — select text manually"); }
+        try {
+            document.execCommand("copy");
+            showToast("Copied to clipboard");
+        } catch (e) {
+            showToast("Copy failed: select text manually");
+        }
         document.body.removeChild(ta);
     }
 
     function doDownload() {
         var text = lastFormatted || jsonInput.value;
-        if (!text) { showToast("Nothing to download"); return; }
+        if (!text) {
+            showToast("Nothing to download");
+            return;
+        }
         var blob = new Blob([text], { type: "application/json" });
         var url = URL.createObjectURL(blob);
         var a = document.createElement("a");
@@ -271,7 +356,9 @@
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        setTimeout(function () {
+            URL.revokeObjectURL(url);
+        }, 1000);
         showToast("Downloaded data.json");
     }
 
@@ -290,7 +377,9 @@
             doValidate();
             showToast("Loaded: " + file.name);
         };
-        reader.onerror = function () { showToast("Error reading file"); };
+        reader.onerror = function () {
+            showToast("Error reading file");
+        };
         reader.readAsText(file);
     });
 
@@ -303,9 +392,8 @@
     jsonInput.addEventListener("input", function () {
         updateStats();
         hideError();
-        setStatus("idle", "Ready");
         lastFormatted = "";
-        jsonOutput.innerHTML = '<span class="empty-hint">Press Format or Validate to see output.</span>';
+        jsonOutput.innerHTML = '<span class="empty-hint">Press Format or Validate to inspect output.</span>';
     });
 
     jsonInput.addEventListener("keydown", function (e) {
@@ -316,9 +404,13 @@
             var indent = (indentSelect.value === "tab") ? "\t" : "  ";
             this.value = this.value.substring(0, start) + indent + this.value.substring(end);
             this.selectionStart = this.selectionEnd = start + indent.length;
+        } else if (e.key === "Escape") {
+            // Allow keyboard-only navigation to escape textarea trap
+            this.blur();
         }
     });
 
+    // Event listeners
     btnFormat.addEventListener("click", doFormat);
     btnMinify.addEventListener("click", doMinify);
     btnValidate.addEventListener("click", doValidate);
@@ -328,16 +420,30 @@
     btnUpload.addEventListener("click", doUpload);
     btnExample.addEventListener("click", doExample);
 
+    btnTheme.addEventListener("click", toggleTheme);
+    btnCloseError.addEventListener("click", hideError);
+
+    tabBtnInput.addEventListener("click", function () { setMobileView("input"); });
+    tabBtnOutput.addEventListener("click", function () { setMobileView("output"); });
+    tabBtnSplit.addEventListener("click", function () { setMobileView("split"); });
+
     document.addEventListener("keydown", function (e) {
         var mod = e.ctrlKey || e.metaKey;
         if (!mod) return;
-        if (e.key === "Enter") { e.preventDefault(); doFormat(); }
-        if (e.key === "m") { e.preventDefault(); doMinify(); }
-        if (e.key === "k") { e.preventDefault(); doClear(); }
+        if (e.key === "Enter") {
+            e.preventDefault();
+            doFormat();
+        } else if (e.key === "m" || e.key === "M") {
+            e.preventDefault();
+            doMinify();
+        } else if (e.key === "k" || e.key === "K") {
+            e.preventDefault();
+            doClear();
+        }
     });
 
+    // Initialize state
+    initTheme();
     updateStats();
     renderOutput("", false);
-    setStatus("idle", "Ready");
-
 }());

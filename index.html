@@ -1,161 +1,190 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description"
-        content="JSON Formatter and Validator - format, minify, validate, and syntax-highlight JSON in your browser. No server, no dependencies." />
-    <title>JSON Formatter &amp; Validator</title>
+        content="Fast, client-side JSON formatter, validator, and minifier with syntax highlighting. Runs entirely in your browser with zero data collection." />
+    <title>format.json - JSON Formatter &amp; Validator</title>
     <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
-    <!-- made by hanx https://hanx.pro -->
-    <!-- last update/touched 26.08.2026 -->
     <header class="header">
         <div class="header-left">
-            <div class="logo-mark" aria-hidden="true">
-                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-                    <text x="1" y="13" font-family="monospace" font-size="11" fill="#fff">{}</text>
-                </svg>
-            </div>
-            <div>
-                <div class="header-title">JSON Tool</div>
-                <div class="header-subtitle">Formatter &amp; Validator</div>
-            </div>
+            <h1 class="header-title">format.json</h1>
         </div>
         <div class="header-right">
-            Made by <a href="https://hanx.lol" target="_blank" rel="noopener">hanx.lol</a>
+            <button id="btn-theme" class="theme-toggle-btn" type="button" aria-label="Toggle color theme" title="Toggle dark/light theme">
+                <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+                <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+                <span class="theme-label" id="theme-label">Light</span>
+            </button>
+            <span class="header-credit">
+                by <a href="https://hanx.lol" target="_blank" rel="noopener">hanx.lol</a>
+            </span>
         </div>
     </header>
 
     <div class="toolbar" role="toolbar" aria-label="JSON Actions">
+        <div class="toolbar-group">
+            <button id="btn-format" class="btn btn-primary" title="Format JSON (Ctrl+Enter)">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <polyline points="9 18 15 12 9 6" />
+                </svg>
+                <span>Format</span>
+            </button>
 
-        <button id="btn-format" class="btn btn-primary" title="Format JSON (Ctrl+Enter)">
-            <svg viewBox="0 0 24 24">
-                <polyline points="9 18 15 12 9 6" />
-            </svg>
-            Format
-        </button>
+            <button id="btn-minify" class="btn" title="Minify JSON (Ctrl+M)">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <polyline points="15 18 9 12 15 6" />
+                </svg>
+                <span>Minify</span>
+            </button>
 
-        <button id="btn-minify" class="btn" title="Minify JSON (Ctrl+M)">
-            <svg viewBox="0 0 24 24">
-                <polyline points="15 18 9 12 15 6" />
-            </svg>
-            Minify
-        </button>
-
-        <button id="btn-validate" class="btn btn-success" title="Validate JSON">
-            <svg viewBox="0 0 24 24">
-                <polyline points="20 6 9 17 4 12" />
-            </svg>
-            Validate
-        </button>
-
-        <div class="toolbar-sep" aria-hidden="true"></div>
-
-        <button id="btn-example" class="btn" title="Load example JSON">
-            <svg viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="8" x2="12" y2="12" />
-                <line x1="12" y1="16" x2="12.01" y2="16" />
-            </svg>
-            Example
-        </button>
-
-        <button id="btn-upload" class="btn" title="Upload .json file">
-            <svg viewBox="0 0 24 24">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="17 8 12 3 7 8" />
-                <line x1="12" y1="3" x2="12" y2="15" />
-            </svg>
-            Upload
-        </button>
-        <input type="file" id="file-upload" accept=".json,application/json" aria-label="Upload JSON file" />
-
-        <div class="toolbar-sep" aria-hidden="true"></div>
-
-        <button id="btn-copy" class="btn" title="Copy formatted JSON">
-            <svg viewBox="0 0 24 24">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-            </svg>
-            Copy
-        </button>
-
-        <button id="btn-download" class="btn" title="Download JSON file">
-            <svg viewBox="0 0 24 24">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
-            Download
-        </button>
-
-        <div class="toolbar-sep" aria-hidden="true"></div>
-
-        <button id="btn-clear" class="btn btn-danger" title="Clear editor (Ctrl+K)">
-            <svg viewBox="0 0 24 24">
-                <polyline points="3 6 5 6 21 6" />
-                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                <path d="M10 11v6" />
-                <path d="M14 11v6" />
-            </svg>
-            Clear
-        </button>
-
-        <div class="toolbar-sep" aria-hidden="true"></div>
-
-        <div class="select-wrap">
-            <label for="indent-select">Indent:</label>
-            <select id="indent-select" aria-label="Indentation size">
-                <option value="2" selected>2 Spaces</option>
-                <option value="4">4 Spaces</option>
-                <option value="tab">Tabs</option>
-            </select>
+            <button id="btn-validate" class="btn btn-success" title="Validate JSON syntax">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <polyline points="20 6 9 17 4 12" />
+                </svg>
+                <span>Validate</span>
+            </button>
         </div>
 
+        <div class="toolbar-sep" aria-hidden="true"></div>
+
+        <div class="toolbar-group">
+            <button id="btn-example" class="btn" title="Load sample JSON">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                <span>Example</span>
+            </button>
+
+            <button id="btn-upload" class="btn" title="Upload JSON file">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+                <span>Upload</span>
+            </button>
+            <input type="file" id="file-upload" accept=".json,application/json" aria-label="Upload JSON file" />
+        </div>
+
+        <div class="toolbar-sep" aria-hidden="true"></div>
+
+        <div class="toolbar-group">
+            <button id="btn-copy" class="btn" title="Copy output to clipboard">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
+                <span>Copy</span>
+            </button>
+
+            <button id="btn-download" class="btn" title="Download output as data.json">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                <span>Download</span>
+            </button>
+        </div>
+
+        <div class="toolbar-sep" aria-hidden="true"></div>
+
+        <div class="toolbar-group">
+            <button id="btn-clear" class="btn btn-danger" title="Clear editor content (Ctrl+K)">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                    <path d="M10 11v6" />
+                    <path d="M14 11v6" />
+                </svg>
+                <span>Clear</span>
+            </button>
+
+            <div class="select-wrap">
+                <label for="indent-select">Indent:</label>
+                <select id="indent-select" aria-label="Indentation spacing">
+                    <option value="2" selected>2 Spaces</option>
+                    <option value="4">4 Spaces</option>
+                    <option value="tab">Tabs</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="mobile-view-tabs" role="tablist" aria-label="Editor View Mode">
+            <button type="button" role="tab" id="tab-btn-input" class="view-tab active" aria-selected="true">Input</button>
+            <button type="button" role="tab" id="tab-btn-output" class="view-tab" aria-selected="false">Output</button>
+            <button type="button" role="tab" id="tab-btn-split" class="view-tab" aria-selected="false">Split</button>
+        </div>
     </div>
 
-    <main class="main" role="main">
-
-        <section class="pane pane-left" aria-label="JSON Input">
+    <main class="main" role="main" id="editor-main" data-mobile-view="input">
+        <section class="pane pane-left" id="pane-input" aria-label="JSON Input Area">
             <div class="pane-header">
                 <span class="pane-title">Input</span>
                 <div class="pane-actions">
-                    <span class="pane-hint">Ctrl+Enter to format</span>
+                    <span class="pane-hint">Ctrl+Enter to format • Esc to unfocus</span>
                 </div>
             </div>
             <textarea id="json-input" spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off"
-                placeholder="Paste or type JSON here..." aria-label="JSON input editor"></textarea>
+                placeholder="Paste or type JSON here..." aria-label="JSON input code editor"></textarea>
         </section>
 
-        <section class="pane pane-right" aria-label="JSON Output">
+        <section class="pane pane-right" id="pane-output" aria-label="JSON Output Area">
             <div class="pane-header">
                 <span class="pane-title">Output</span>
                 <div class="pane-actions">
                     <span class="pane-hint">Syntax highlighted</span>
                 </div>
             </div>
-            <div class="output-area" id="output-wrap">
+            <div class="output-area" id="output-wrap" tabindex="0" role="region" aria-label="Formatted output container">
                 <code id="json-output" aria-live="polite" aria-label="Formatted JSON output"></code>
             </div>
         </section>
 
-        <div id="error-detail" role="alert" aria-live="assertive"></div>
+        <div id="error-detail" class="error-banner" role="alert" aria-live="assertive">
+            <div class="error-banner-content">
+                <div class="error-banner-header">
+                    <svg viewBox="0 0 24 24" class="error-icon" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <span class="error-title">JSON Parse Error</span>
+                    <button id="btn-close-error" class="error-close-btn" type="button" aria-label="Dismiss error">
+                        &times;
+                    </button>
+                </div>
+                <div id="error-message" class="error-body"></div>
+            </div>
+        </div>
 
         <footer class="statusbar" aria-label="Status bar">
-            <div id="status-msg" class="status-msg idle">
-                <span id="status-dot" class="status-dot"></span>
-                <span id="status-text">Ready</span>
-            </div>
             <div class="status-stats">
                 <div class="stat-item">Chars: <span id="char-count">0</span></div>
                 <div class="stat-item">Lines: <span id="line-count">0</span></div>
+                <div class="stat-item">Size: <span id="size-count">0 B</span></div>
             </div>
         </footer>
-
     </main>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
