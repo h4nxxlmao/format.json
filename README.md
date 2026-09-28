@@ -43,4 +43,4 @@ python -m http.server 8000
 
 ## License
 
-MIT (c) [hanx](https://hanx.pro) ([hanx.lol](https://hanx.lol))
+MIT (c) [hanx](https://hanx.pro) ([hanx.pro](https://hanx.pro))
